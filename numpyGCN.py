@@ -1,6 +1,5 @@
 import operator
 import numpy as np
-import nltk
 import sys
 from datetime import datetime
 from utils import *
@@ -20,15 +19,18 @@ class numpyGCN:
 	# simple forward pass
 	def forward(self, X, A):
 		out_1 = relu((A.dot(X)).dot(self.W_1))
-		return = softmax((A.dot(out_1)).dot(self.W_2))
+		return softmax((A.dot(out_1)).dot(self.W_2))
 
 	# argmax to predict the label
 	def predict(self, x):
 		return np.argmax(x, axis=1)
 
 	# cross-entropy loss
-	def calc_loss(self, preds, y):
-		raise NotImplementedError
+	def calc_loss(self, train_mask, out_2, y):
+		loss = 0
+		for idx in np.argwhere(train_mask == True):
+			loss += np.dot(y[idx],np.log(preds[idx]))
+		return -loss 
 
 	# back propagation 
 	def backprop(self, x, y):
