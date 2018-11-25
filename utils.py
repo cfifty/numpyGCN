@@ -11,6 +11,9 @@ def softmax(X):
 def relu(X):
 	return np.maximum(X, np.zeros((X.shape)))
 
+def relu_diff(X):
+	return (X > 0).astype(int)
+
 '''
 Code below this point is from Kipf & Welling's GCN paper for building the graph & dataset splits
 '''

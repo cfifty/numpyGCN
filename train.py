@@ -14,17 +14,16 @@ def normalize_adj(adj):
 def train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, lr=0.005, epochs=100):
 	losses = []
 	for epoch in range(epochs):
-		loss = model.calc_loss(features, y_train, train_mask)
-
-
-
-	raise NotImplementedError
+		train_loss = model.calc_loss(features, y_train, train_mask)
+		val_loss = model.calc_loss(features, y_val, val_mask)
+		time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+		print("%s: Train/Valid Loss after epoch=%d: %f :: %f" % (time, epoch, train_loss, val_loss))
+		model.gd_update(X,Y,lr)
 
 
 if __name__ == '__main__':
 	adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask = load_data('Cora')
-	for idx in np.argwhere(train_mask == True):
-		print(idx)
-		print(y_train[idx])
+	model = numpyGCN(input_dim=features.shape[0], hidden_dim=16, output_dim=y_train.shape[1])
+
 
 
