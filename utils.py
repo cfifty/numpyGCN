@@ -8,6 +8,9 @@ import sys
 def softmax(X):
 	return np.exp(X) / np.sum(np.exp(X), axis=1)[:,None]
 
+def softmax_cross_entropy_deriv(X, Y):
+	return X - Y
+
 def relu(X):
 	return np.maximum(X, np.zeros((X.shape)))
 

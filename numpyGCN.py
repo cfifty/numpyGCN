@@ -23,15 +23,26 @@ class numpyGCN:
 		return softmax((A.dot(self.out_1)).dot(self.W_2))
 
 	# argmax to predict the label
-	def predict(self, x):
-		return np.argmax(x, axis=1)
+	def predict(self, X):
+		return np.argmax(X, axis=1)
 
-	# cross-entropy loss
-	def calc_loss(self, mask, out_2, y):
+	# returns the accuracy of the classifier
+	def accuracy(self, X, Y):
+		idx = np.argmax(X, axis=1)
+		return Y[idx].sum()/Y.shape[0]
+
+	# calculates the unnormalized total loss with cross-entropy
+	def calc_total_loss(self, X, Y, mask):
 		loss = 0
+		out_2 = self.forward(X)
 		for idx in np.argwhere(mask == True):
 			loss += np.dot(y[idx],np.log(out_2[idx]))
 		return -loss 
+
+	# normalized cross entropy loss
+	def calc_loss(self, X, Y, mask):
+		N = mask.sum()
+		return self.calc_total_loss(X, Y, mask)/N
 
 	# back propagation 
 	def backprop(self, x, y, mask, A):
@@ -39,22 +50,22 @@ class numpyGCN:
 		dW_2 = np.zeros(self.W_2.shape)
 		
 		# forward pass output
-		out_2 = self.forward(X)
+		out2 = self.forward(X)
 
 		# last layer bp for cross entropy loss with softmax activation
-		dLdX_2 = out_2[mask] - y[mask]
+		dL_dIn2 = softmax_cross_entropy_deriv(out_2, y)
 
-		# TODO: fix dX_2dW_2 when I remember linear algebra derivatives...
-		# dX/dW of X = AYW 
-		dX_2dW_2 = np.dot(A, self.out_1)
+		dIn2_dW2 = np.dot(A, self.out_1).T
+		dL_dW2 = np.dot(dIn2_dW2, dL_dIn2)
+
+		# next layer...
+		dIn2_dOut1 = self.W_2
 
 
-		dLdW_2 = np.dot(dX_2dW_2.T, dLdX_2)
 
 		# first layer bp with ReLU
-		# TODO: fix when I remember lienar algebra derivatives...
 		# dX/dY of X = AYW
-		dLdY_1 = np.dot(,dLdX_2)
+		dLdY_1 = np.dot(self.W_2,dLdX_2)
 		
 		dLdX_1 = relu_diff(A.dot(X).dot(self.W_1)).dot(dLdY_1)
 		

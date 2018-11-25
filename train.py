@@ -23,7 +23,12 @@ def train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, lr
 
 if __name__ == '__main__':
 	adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask = load_data('Cora')
-	model = numpyGCN(input_dim=features.shape[0], hidden_dim=16, output_dim=y_train.shape[1])
+	adj = normalize_adj(adj)
 
+	# model = numpyGCN(input_dim=features.shape[1], hidden_dim=16, output_dim=y_train.shape[1])
+	# train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask)
+
+	# test_loss = model.calc_loss(features, y_test, test_mask)
+	# print("Test Loss : %f" % test_loss)
 
 
