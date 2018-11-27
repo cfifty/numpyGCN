@@ -14,7 +14,7 @@ def normalize_adj(adj):
     d_inv_sqrt = np.power(rowsum, -0.5).flatten()
     d_inv_sqrt[np.isinf(d_inv_sqrt)] = 0.
     d_mat_inv_sqrt = sp.diags(d_inv_sqrt)
-    return adj.dot(d_mat_inv_sqrt).transpose().dot(d_mat_inv_sqrt).tocoo()
+    return d_mat_inv_sqrt.dot(adj).dot(d_mat_inv_sqrt).tocoo()
 
 def train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, lr=0.005, epochs=100):
 	losses = []
@@ -62,6 +62,4 @@ def run_model():
 
 
 if __name__ == '__main__':
-	test_gd_step()
-
-
+	run_model()

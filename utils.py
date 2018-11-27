@@ -6,7 +6,9 @@ from scipy.sparse.linalg.eigen.arpack import eigsh
 import sys
 
 def softmax(X):
-	return np.exp(X) / np.sum(np.exp(X), axis=1)[:,None]
+    exp_X = np.exp(X)
+    exp_X_rowsum = np.sum(exp_X, axis=1)[:,None]
+    return np.divide(exp_X, exp_X_rowsum, out=np.zeros_like(X), where=exp_X_rowsum > 0)
 
 def softmax_cross_entropy_deriv(X, Y):
 	return X - Y
