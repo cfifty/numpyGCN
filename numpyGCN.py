@@ -1,8 +1,7 @@
-import operator
-import numpy as np
-import sys
 from datetime import datetime
-from utils import *
+import numpy as np
+
+from utils import softmax, softmax_cross_entropy_deriv, relu, relu_diff
 
 class numpyGCN:
 

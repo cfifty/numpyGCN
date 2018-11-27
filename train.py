@@ -1,11 +1,16 @@
-from numpyGCN import *
+from datetime import datetime
+import numpy as np
+import scipy.sparse as sp
+
+from numpyGCN import numpyGCN
+from utils import load_data
 
 
 # coordinate list sparse matrix for normalized adjacency matrix
 def normalize_adj(adj):
     """Symmetrically normalize adjacency matrix."""
     adj = sp.coo_matrix(adj)
-    rowsum = np.array(adj.sum(1))
+    rowsum = np.array(adj.sum(axis=1))
     d_inv_sqrt = np.power(rowsum, -0.5).flatten()
     d_inv_sqrt[np.isinf(d_inv_sqrt)] = 0.
     d_mat_inv_sqrt = sp.diags(d_inv_sqrt)
@@ -14,8 +19,8 @@ def normalize_adj(adj):
 def train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, lr=0.005, epochs=100):
 	losses = []
 	for epoch in range(epochs):
-		train_loss = model.calc_loss(features, y_train, train_mask)
-		val_loss = model.calc_loss(features, y_val, val_mask)
+		train_loss = model.calc_loss(features, y_train, adj, train_mask)
+		val_loss = model.calc_loss(features, y_val, adj, val_mask)
 		time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 		print("%s: Train/Valid Loss after epoch=%d: %f :: %f" % (time, epoch, train_loss, val_loss))
 		model.gd_update(features, y_train, adj, train_mask, lr=0.1)
