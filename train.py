@@ -22,6 +22,7 @@ def train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, lr
 		train_loss = model.calc_loss(features, y_train, adj, train_mask)
 		val_loss = model.calc_loss(features, y_val, adj, val_mask)
 		time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+		print(train_loss)
 		print("%s: Train/Valid Loss after epoch=%d: %f :: %f" % (time, epoch, train_loss, val_loss))
 		model.gd_update(features, y_train, adj, train_mask, lr=0.1)
 
@@ -51,15 +52,15 @@ def test_gd_step():
 	model = numpyGCN(input_dim=features.shape[1], hidden_dim=16, output_dim=y_train.shape[1])
 	model.gd_update(features, y_train, adj, train_mask, lr=0.1)
 
-def run_model():
+def train():
 	adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask = load_data('Cora')
 	adj = normalize_adj(adj)
 	model = numpyGCN(input_dim=features.shape[1], hidden_dim=16, output_dim=y_train.shape[1])
-	train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask)
+	train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask,epochs=2)
 
-	test_loss = model.calc_loss(features, y_test, test_mask)
+	test_loss = model.calc_loss(features, y_test, adj, test_mask)
 	print("Test Loss : %f" % test_loss)
 
 
 if __name__ == '__main__':
-	run_model()
+	train()

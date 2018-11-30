@@ -62,55 +62,40 @@ class numpyGCN:
 		dW_1 = np.zeros(self.W_1.shape)
 		dW_2 = np.zeros(self.W_2.shape)
 
-		print("w1", self.W_1.shape)
-		print("w2", self.W_2.shape)
+		#print("w1", self.W_1.shape)
+		#print("w2", self.W_2.shape)
 
 		# forward pass output
 		preds = self.forward(X, A)
-		print("forward pass complete")
+		#print("forward pass complete")
 
 		# last layer bp for cross entropy loss with softmax activation
 		dL_dIn2 = softmax_cross_entropy_deriv(preds, Y)
-		print("dL_dIn2", dL_dIn2.shape)
+		#print("dL_dIn2", dL_dIn2.shape)
 
-		print("softmax cross entropy deriv finished")
-		print("out1", self.out_1.shape)
-		print("A", A.shape)
-		print("preds", preds.shape)
+		#print("softmax cross entropy deriv finished")
+		#print("out1", self.out_1.shape)
+		#print("A", A.shape)
+		#print("preds", preds.shape)
 		dIn2_dW2 = A.dot(self.out_1)
-		print("dIn2_dW2 finished..")
+		#print("dIn2_dW2 finished..")
 
 		dL_dW2 = dIn2_dW2.transpose().dot(dL_dIn2)
-		print("dl_dw2", dL_dW2.shape)
-		print("dL/dW2 finished...")
+		#print("dl_dw2", dL_dW2.shape)
+		#print("dL/dW2 finished...")
 
-		# next layer...
-		# TODO: figure out how to compute dIn2/dOut1
-		dIn2_dOut1 = self.in_2.transpose() # dL_dW2.transpose().dot(self.out_1.transpose()).dot(A.transpose())
-		print("dIn2_dOut1", dIn2_dOut1.shape)
-
-		print("dIn2_dOut1 finished...")
-
-		print("in2", self.in_2.shape)
-		print("in1", self.in_1.shape)
-		print("X", X.shape)
-
-		dL_dOut1 = dL_dIn2.dot(dIn2_dOut1)
-		print("dL_dOut1", dL_dOut1.shape)
-
-		print("dL/dOut1 finished...")
+		dL_dOut1 = (A.dot(dL_dIn2)).dot(self.W_2.T)
+		#print("dL_dOut1 ", dL_dOut1.shape)
 
 		dOut1_dIn1 = relu_diff(self.in_1)
-		dL_dIn1 = dL_dOut1.dot(dOut1_dIn1)
-		print("dl_dIn1", dL_dIn1.shape)
+		dL_dIn1 = dL_dOut1 * (dOut1_dIn1)
 
-		print("dL/dIn1 finished...")
+		#print("dL_dIn1", dL_dIn1.shape)
 
-		dIn1_dW1 = A.dot(X)
-		dL_dW1 = dIn1_dW1.transpose().dot(dL_dIn1)
-		print("dL_dW1", dL_dW1.shape)
-		print("dL/dW1 finished...")
+		dIn1_dW1 = A.dot(X).T
+		dL_dW1 = dIn1_dW1.dot(dL_dIn1)
 
+		#print("dL_dW1 shape : " + str(dL_dW1.shape))
 		return (dL_dW1, dL_dW2)
 
 
