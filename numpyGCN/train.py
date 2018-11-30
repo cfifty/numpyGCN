@@ -5,12 +5,12 @@ import numpy as np
 from numpyGCN import numpyGCN
 from utils import load_data
 
-def train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, early_stopping=True, lr=0.005, epochs=200):
+def train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, early_stopping=True, lr=0.005, d=0.0, epochs=200):
     total_time = 0
     best_val_loss, val_epoch = float('inf'), 0
     for epoch in range(epochs):
         start = time.time()
-        model.gd_update(features, y_train, adj, train_mask, lr=0.1)
+        model.gd_update(features, y_train, adj, train_mask, lr, d)
         end = time.time()
         train_loss = model.calc_loss(features, y_train, adj, train_mask)
         train_accuracy = model.compute_accuracy(features, y_train, adj, train_mask)
@@ -55,12 +55,12 @@ def test_calc_loss():
 def test_gd_step():
     adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask = load_data('Cora')
     model = numpyGCN(input_dim=features.shape[1], hidden_dim=16, output_dim=y_train.shape[1])
-    model.gd_update(features, y_train, adj, train_mask, lr=0.1)
+    model.gd_update(features, y_train, adj, train_mask, lr=0.1, d=0.2)
 
 def train():
     adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask = load_data('Cora')
     model = numpyGCN(input_dim=features.shape[1], hidden_dim=16, output_dim=y_train.shape[1])
-    train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, epochs=200)
+    train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, lr=0.1, d=0.3, epochs=200)
 
     test_loss = model.calc_loss(features, y_test, adj, test_mask)
     test_accuracy = model.compute_accuracy(features, y_test, adj, test_mask)

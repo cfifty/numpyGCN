@@ -20,10 +20,22 @@ class numpyGCN:
         self.W_2 = np.random.uniform(-np.sqrt(1./output_dim), np.sqrt(1./output_dim), (hidden_dim, output_dim))
 
     # simple forward pass
-    def forward(self, X, A):
-        self.in_1 = A.dot(X).dot(self.W_1)
+    def forward(self, X, A, drop=None):
+        if drop:
+            d1, d2 = drop
+        
+        if drop:
+            self.in_1 = A.dot(X).dot(self.W_1 * d1)
+        else:
+            self.in_1 = A.dot(X).dot(self.W_1)
+        
         self.out_1 = relu(self.in_1)
-        self.in_2 = A.dot(self.out_1).dot(self.W_2)
+        
+        if drop:
+            self.in_2 = A.dot(self.out_1).dot(self.W_2 * d2)
+        else:
+            self.in_2 = A.dot(self.out_1).dot(self.W_2)
+        
         self.out_2 = softmax(self.in_2)
         return self.out_2
 
@@ -58,12 +70,18 @@ class numpyGCN:
         return (self.calc_total_loss(X, Y, A, mask) / N)
 
     # back propagation
-    def backprop(self, X, Y, A, mask):
+    def backprop(self, X, Y, A, mask, d):
         dW_1 = np.zeros(self.W_1.shape)
         dW_2 = np.zeros(self.W_2.shape)
 
-        # predictions from forward pass
-        preds = self.forward(X, A)
+        # divide by d so expectation of GCN layer doesn't change from train to test
+        if d:
+            d1 = np.random.binomial(1, (1-d), size=self.W_1.shape) / (1-d)
+            d2 = np.random.binomial(1, (1-d), size=self.W_2.shape) / (1-d)
+            preds = self.forward(X, A, (d1,d2))
+        else: 
+            # predictions from forward pass
+            preds = self.forward(X,A)
 
         # IMPORTANT: update gradient based only on masked labels
         preds[~mask] = Y[~mask]
@@ -83,14 +101,17 @@ class numpyGCN:
 
         dL_dW1 = dIn1_dW1.dot(dL_dIn1)
 
+        if d:
+            dL_dW1 *= d1 
+            dL_dW2 *= d2
         return (dL_dW1, dL_dW2)
 
     def gradient_check(self, x, y, h=0.001, error_threshold=0.01):
         raise NotImplementedError
 
-    def gd_update(self, X, Y, A, mask, lr=0.1):
+    def gd_update(self, X, Y, A, mask, lr=0.1, d=0.0):
         # compute weight gradients
-        dW_1, dW_2 = self.backprop(X, Y, A, mask)
+        dW_1, dW_2 = self.backprop(X, Y, A, mask, d)
 
         # TODO: drop loss by set amount during training...
         #loss = self.calc_loss(X, Y, A, mask)
