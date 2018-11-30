@@ -15,9 +15,9 @@ class numpyGCN:
         self.in_2 = None
         self.out_2 = None
 
-        # randomly initialize weight matrices
+        # randomly initialize weight matrices according to Glorot & Bengio (2010)
         self.W_1 = np.random.uniform(-np.sqrt(1./hidden_dim), np.sqrt(1./hidden_dim), (input_dim, hidden_dim))
-        self.W_2 = np.random.uniform(-np.sqrt(1./hidden_dim), np.sqrt(1./hidden_dim), (hidden_dim, output_dim))
+        self.W_2 = np.random.uniform(-np.sqrt(1./output_dim), np.sqrt(1./output_dim), (hidden_dim, output_dim))
 
     # simple forward pass
     def forward(self, X, A):
@@ -92,8 +92,9 @@ class numpyGCN:
         # compute weight gradients
         dW_1, dW_2 = self.backprop(X, Y, A, mask)
 
-        loss = self.calc_loss(X, Y, A, mask)
-        lr = loss * .01
+        # TODO: drop loss by set amount during training...
+        #loss = self.calc_loss(X, Y, A, mask)
+        #lr = loss * .01
 
         # parameter update
         self.W_1 -= dW_1 * lr
