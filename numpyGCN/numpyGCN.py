@@ -50,58 +50,38 @@ class numpyGCN:
 		preds = self.forward(X, A)
 		for idx in np.argwhere(mask == True):
 			loss += np.inner(Y[idx], np.log(preds[idx]))
-		return -loss
+		return np.asscalar(-loss)
 
 	# normalized cross entropy loss
 	def calc_loss(self, X, Y, A, mask):
 		N = mask.sum()
-		return self.calc_total_loss(X, Y, A, mask) / N
+		return (self.calc_total_loss(X, Y, A, mask) / N)
 
 	# back propagation
 	def backprop(self, X, Y, A, mask):
 		dW_1 = np.zeros(self.W_1.shape)
 		dW_2 = np.zeros(self.W_2.shape)
 
-		#print("w1", self.W_1.shape)
-		#print("w2", self.W_2.shape)
-
-		# forward pass output
+		# predictions from forward pass
 		preds = self.forward(X, A)
-		#print("forward pass complete")
 
 		# IMPORTANT: update gradient based only on masked labels
 		preds[~mask] = Y[~mask]
 
 		# last layer bp for cross entropy loss with softmax activation
 		dL_dIn2 = softmax_cross_entropy_deriv(preds, Y)
-		# print("dL_dIn2", dL_dIn2.shape)
 
-		# print("softmax cross entropy deriv finished...")
-		# print("out1", self.out_1.shape)
-		# print("A", A.shape)
-		# print("preds", preds.shape)
 		dIn2_dW2 = A.dot(self.out_1).transpose()
-		# print("dIn2_dW2", dIn2_dW2.shape)
-
 		dL_dW2 = dIn2_dW2.dot(dL_dIn2)
-		# print("dL_dw2", dL_dW2.shape)
-		# print("dL/dW2 finished...")
 
+		# apply backprop for next layer
 		dL_dOut1 = A.transpose().dot(dL_dIn2).dot(self.W_2.transpose())
-		# print("dL_dOut1", dL_dOut1.shape)
 
 		dOut1_dIn1 = relu_diff(self.in_1)
-		# print("dOut1_dIn1", dOut1_dIn1.shape)
-
 		dL_dIn1 = dL_dOut1 * dOut1_dIn1
-		# print("dL_dIn1", dL_dIn1.shape)
-
 		dIn1_dW1 = A.dot(X).transpose()
-		# print("dIn1_dW1", dIn1_dW1.shape)
 
 		dL_dW1 = dIn1_dW1.dot(dL_dIn1)
-		# print("dL_dW1", dL_dW1.shape)
-		# print("dL/dW1 finished...")
 
 		return (dL_dW1, dL_dW2)
 

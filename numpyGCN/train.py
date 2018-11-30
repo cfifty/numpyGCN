@@ -1,10 +1,10 @@
+import time
 from datetime import datetime
 import numpy as np
 import scipy.sparse as sp
 
 from numpyGCN import numpyGCN
 from utils import load_data
-
 
 # coordinate list sparse matrix for normalized adjacency matrix
 def normalize_adj(adj):
@@ -18,14 +18,22 @@ def normalize_adj(adj):
     return adj.dot(d_mat_inv_sqrt).transpose().dot(d_mat_inv_sqrt).tocoo()
 
 def train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, lr=0.005, epochs=100):
-	for epoch in range(epochs):
-		train_loss = model.calc_loss(features, y_train, adj, train_mask)
-		train_accuracy = model.compute_accuracy(features, y_train, adj, train_mask)
-		val_loss = model.calc_loss(features, y_val, adj, val_mask)
-		val_accuracy = model.compute_accuracy(features, y_val, adj, val_mask)
-		time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-		print("%s: Train/Valid Loss after epoch=%d: %f (acc=%f) :: %f (acc=%f)" % (time, epoch, train_loss, train_accuracy, val_loss, val_accuracy))
-		model.gd_update(features, y_train, adj, train_mask, lr=0.1)
+    total_time = 0
+    for epoch in range(epochs):
+        start = time.time()
+        model.gd_update(features, y_train, adj, train_mask, lr=0.1)
+        end = time.time()
+        train_loss = model.calc_loss(features, y_train, adj, train_mask)
+        train_accuracy = model.compute_accuracy(features, y_train, adj, train_mask)
+        val_loss = model.calc_loss(features, y_val, adj, val_mask)
+        val_accuracy = model.compute_accuracy(features, y_val, adj, val_mask)
+        elapsed = end - start
+        print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(train_loss),
+          "train_acc=", "{:.5f}".format(train_accuracy), "val_loss=", "{:.5f}".format(val_loss),
+          "val_acc=", "{:.5f}".format(val_accuracy), "time=", "{:.5f}".format(elapsed))
+
+        total_time += elapsed
+    print("Total time: {:.4f}s".format(total_time))
 
 # test the forward pass
 def test_forward():
@@ -61,8 +69,7 @@ def train():
 
 	test_loss = model.calc_loss(features, y_test, adj, test_mask)
 	test_accuracy = model.compute_accuracy(features, y_test, adj, test_mask)
-	print("Test Loss : %f (acc=%f)" % (test_loss, test_accuracy))
-
+	print("test_loss=", "{:.5f}".format(test_loss), "test_acc=", "{:.5f}".format(test_accuracy))
 
 if __name__ == '__main__':
 	train()
