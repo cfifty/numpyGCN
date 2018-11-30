@@ -20,9 +20,11 @@ def normalize_adj(adj):
 def train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, lr=0.005, epochs=100):
 	for epoch in range(epochs):
 		train_loss = model.calc_loss(features, y_train, adj, train_mask)
+		train_accuracy = model.compute_accuracy(features, y_train, adj, train_mask)
 		val_loss = model.calc_loss(features, y_val, adj, val_mask)
+		val_accuracy = model.compute_accuracy(features, y_val, adj, val_mask)
 		time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-		print("%s: Train/Valid Loss after epoch=%d: %f :: %f" % (time, epoch, train_loss, val_loss))
+		print("%s: Train/Valid Loss after epoch=%d: %f (acc=%f) :: %f (acc=%f)" % (time, epoch, train_loss, train_accuracy, val_loss, val_accuracy))
 		model.gd_update(features, y_train, adj, train_mask, lr=0.1)
 
 # test the forward pass
@@ -58,7 +60,8 @@ def train():
 	train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, epochs=100)
 
 	test_loss = model.calc_loss(features, y_test, adj, test_mask)
-	print("Test Loss : %f" % test_loss)
+	test_accuracy = model.compute_accuracy(features, y_test, adj, test_mask)
+	print("Test Loss : %f (acc=%f)" % (test_loss, test_accuracy))
 
 
 if __name__ == '__main__':
