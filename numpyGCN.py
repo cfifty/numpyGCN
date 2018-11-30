@@ -69,6 +69,9 @@ class numpyGCN:
 		preds = self.forward(X, A)
 		#print("forward pass complete")
 
+		# IMPORTANT: update gradient based only on masked labels
+		preds[~mask] = Y[~mask]
+
 		# last layer bp for cross entropy loss with softmax activation
 		dL_dIn2 = softmax_cross_entropy_deriv(preds, Y)
 		# print("dL_dIn2", dL_dIn2.shape)
