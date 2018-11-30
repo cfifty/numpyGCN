@@ -1,4 +1,5 @@
 from inits import *
+import xxhash
 import tensorflow as tf
 
 flags = tf.app.flags
@@ -152,8 +153,9 @@ class GraphConvolution(Layer):
 
         with tf.variable_scope(self.name + '_vars'):
             for i in range(len(self.support)):
-                self.vars['weights_' + str(i)] = glorot([input_dim, output_dim],
-                                                        name='weights_' + str(i))
+                # Use uniform weight initialization
+                self.vars['weights_' + str(i)] = uniform([input_dim, output_dim],
+                                                         name='weights_' + str(i))
             if self.bias:
                 self.vars['bias'] = zeros([output_dim], name='bias')
 
@@ -175,6 +177,79 @@ class GraphConvolution(Layer):
             if not self.featureless:
                 pre_sup = dot(x, self.vars['weights_' + str(i)],
                               sparse=self.sparse_inputs)
+            else:
+                pre_sup = self.vars['weights_' + str(i)]
+            support = dot(self.support[i], pre_sup, sparse=True)
+            supports.append(support)
+        output = tf.add_n(supports)
+
+        # bias
+        if self.bias:
+            output += self.vars['bias']
+
+        return self.act(output)
+
+class GraphConvolutionCompressed(Layer):
+    # W1, W2 = 1433 x 16, 16 x 7
+    """Graph convolution layer compressed with the hashing trick."""
+    def __init__(self, input_dim, output_dim, placeholders, dropout=0.,
+                 sparse_inputs=False, act=tf.nn.relu, bias=False,
+                 featureless=False, virtual_weight_dim=91712, **kwargs):
+        super(GraphConvolutionCompressed, self).__init__(**kwargs)
+
+        if dropout:
+            self.dropout = placeholders['dropout']
+        else:
+            self.dropout = 0.
+
+        self.act = act
+        self.support = placeholders['support']
+        self.sparse_inputs = sparse_inputs
+        self.featureless = featureless
+        self.bias = bias
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.virtual_weight_dim = virtual_weight_dim
+
+        # helper variable for sparse dropout
+        self.num_features_nonzero = placeholders['num_features_nonzero']
+
+        with tf.variable_scope(self.name + '_vars'):
+            for i in range(len(self.support)):
+                # Use uniform weight initialization
+                self.vars['weights_' + str(i)] = uniform([virtual_weight_dim],
+                                                         name='weights_' + str(i))
+            if self.bias:
+                self.vars['bias'] = zeros([output_dim], name='bias')
+
+        if self.logging:
+            self._log_vars()
+
+    def _call(self, inputs):
+        x = inputs
+
+        # dropout
+        if self.sparse_inputs:
+            x = sparse_dropout(x, 1-self.dropout, self.num_features_nonzero)
+        else:
+            x = tf.nn.dropout(x, 1-self.dropout)
+
+        # build up hash mappings
+        mappings = []
+        for k in range(self.input_dim):
+            mappings.append([])
+            for j in range(self.output_dim):
+                # Compute hash index
+                virtual_weight_idx = xxhash.xxh32_intdigest(str((k,j))) % self.virtual_weight_dim
+                mappings[-1].append(virtual_weight_idx)
+        mappings = tf.stack(mappings)
+
+        # convolve
+        supports = list()
+        for i in range(len(self.support)):
+            if not self.featureless:
+                virtual_weights = tf.gather(self.vars['weights_' + str(i)], mappings)
+                pre_sup = dot(x, virtual_weights, sparse=self.sparse_inputs)
             else:
                 pre_sup = self.vars['weights_' + str(i)]
             support = dot(self.support[i], pre_sup, sparse=True)
