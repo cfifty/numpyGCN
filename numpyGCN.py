@@ -112,6 +112,9 @@ class numpyGCN:
 		# compute weight gradients
 		dW_1, dW_2 = self.backprop(X, Y, A, mask)
 
+		loss = self.calc_loss(X, Y, A, mask)
+		lr = loss * .01
+
 		# parameter update
 		self.W_1 -= dW_1 * lr
 		self.W_2 -= dW_2 * lr
