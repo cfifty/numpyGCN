@@ -5,7 +5,7 @@ from utils import softmax, softmax_cross_entropy_deriv, relu, relu_diff
 
 class numpyGCN:
 
-	# two layer GCN 
+	# two layer GCN
 	def __init__(self, input_dim, hidden_dim, output_dim):
 		self.input_dim = input_dim
 		self.hidden_dim = hidden_dim
@@ -38,7 +38,7 @@ class numpyGCN:
 		Y = Y[mask]
 		out = out[mask]
 		idx = np.argmax(out, axis=1)
-		
+
 		num_correct = 0
 		for i in range(Y.shape[0]):
 			num_correct += Y[i, idx[i]]
@@ -47,17 +47,17 @@ class numpyGCN:
 	# calculates the unnormalized total loss with cross-entropy
 	def calc_total_loss(self, X, Y, A, mask):
 		loss = 0
-		out_2 = self.forward(X, A)
+		preds = self.forward(X, A)
 		for idx in np.argwhere(mask == True):
-			loss += np.dot(Y[idx],np.log(out_2[idx].T))
-		return -loss 
+			loss += np.inner(Y[idx], np.log(preds[idx]))
+		return -loss
 
 	# normalized cross entropy loss
 	def calc_loss(self, X, Y, A, mask):
 		N = mask.sum()
-		return (self.calc_total_loss(X, Y, A, mask)/N)[0][0]
+		return self.calc_total_loss(X, Y, A, mask) / N
 
-	# back propagation 
+	# back propagation
 	def backprop(self, X, Y, A, mask):
 		dW_1 = np.zeros(self.W_1.shape)
 		dW_2 = np.zeros(self.W_2.shape)
@@ -71,33 +71,36 @@ class numpyGCN:
 
 		# last layer bp for cross entropy loss with softmax activation
 		dL_dIn2 = softmax_cross_entropy_deriv(preds, Y)
-		#print("dL_dIn2", dL_dIn2.shape)
+		# print("dL_dIn2", dL_dIn2.shape)
 
-		#print("softmax cross entropy deriv finished")
-		#print("out1", self.out_1.shape)
-		#print("A", A.shape)
-		#print("preds", preds.shape)
-		dIn2_dW2 = A.dot(self.out_1)
-		#print("dIn2_dW2 finished..")
+		# print("softmax cross entropy deriv finished...")
+		# print("out1", self.out_1.shape)
+		# print("A", A.shape)
+		# print("preds", preds.shape)
+		dIn2_dW2 = A.dot(self.out_1).transpose()
+		# print("dIn2_dW2", dIn2_dW2.shape)
 
-		dL_dW2 = dIn2_dW2.transpose().dot(dL_dIn2)
-		#print("dl_dw2", dL_dW2.shape)
-		#print("dL/dW2 finished...")
+		dL_dW2 = dIn2_dW2.dot(dL_dIn2)
+		# print("dL_dw2", dL_dW2.shape)
+		# print("dL/dW2 finished...")
 
-		dL_dOut1 = (A.dot(dL_dIn2)).dot(self.W_2.T)
-		#print("dL_dOut1 ", dL_dOut1.shape)
+		dL_dOut1 = A.transpose().dot(dL_dIn2).dot(self.W_2.transpose())
+		# print("dL_dOut1", dL_dOut1.shape)
 
 		dOut1_dIn1 = relu_diff(self.in_1)
-		dL_dIn1 = dL_dOut1 * (dOut1_dIn1)
+		# print("dOut1_dIn1", dOut1_dIn1.shape)
 
-		#print("dL_dIn1", dL_dIn1.shape)
+		dL_dIn1 = dL_dOut1 * dOut1_dIn1
+		# print("dL_dIn1", dL_dIn1.shape)
 
-		dIn1_dW1 = A.dot(X).T
+		dIn1_dW1 = A.dot(X).transpose()
+		# print("dIn1_dW1", dIn1_dW1.shape)
+
 		dL_dW1 = dIn1_dW1.dot(dL_dIn1)
+		# print("dL_dW1", dL_dW1.shape)
+		# print("dL/dW1 finished...")
 
-		#print("dL_dW1 shape : " + str(dL_dW1.shape))
 		return (dL_dW1, dL_dW2)
-
 
 	def gradient_check(self, x, y, h=0.001, error_threshold=0.01):
 		raise NotImplementedError
