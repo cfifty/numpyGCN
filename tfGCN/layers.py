@@ -192,7 +192,7 @@ class GraphConvolution(Layer):
 class GraphConvolutionCompressed(Layer):
     # W1, W2 = 1433 x 16, 16 x 7
     """Graph convolution layer compressed with the hashing trick."""
-    def __init__(self, input_dim, output_dim, placeholders, dropout=0.,
+    def __init__(self, input_dim, output_dim, placeholders, layer_num, dropout=0.,
                  sparse_inputs=False, act=tf.nn.relu, bias=False,
                  featureless=False, virtual_weight_dim=91712, **kwargs):
         super(GraphConvolutionCompressed, self).__init__(**kwargs)
@@ -210,6 +210,7 @@ class GraphConvolutionCompressed(Layer):
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.virtual_weight_dim = virtual_weight_dim
+        self.seed = layer_num
 
         # helper variable for sparse dropout
         self.num_features_nonzero = placeholders['num_features_nonzero']
@@ -236,19 +237,25 @@ class GraphConvolutionCompressed(Layer):
 
         # build up hash mappings
         mappings = []
+        signs = []
         for k in range(self.input_dim):
             mappings.append([])
+            signs.append([])
             for j in range(self.output_dim):
                 # Compute hash index
-                virtual_weight_idx = xxhash.xxh32_intdigest(str((k,j))) % self.virtual_weight_dim
+                virtual_weight_idx = \
+                    xxhash.xxh32_intdigest(str((k,j)), self.seed) % self.virtual_weight_dim
+                hashed_sign = 1. - 2 * (xxhash.xxh32_intdigest(str((k, j)), self.seed + 1000) % 2)
                 mappings[-1].append(virtual_weight_idx)
+                signs[-1].append(hashed_sign)
         mappings = tf.stack(mappings)
+        signs = tf.stack(signs)
 
         # convolve
         supports = list()
         for i in range(len(self.support)):
             if not self.featureless:
-                virtual_weights = tf.gather(self.vars['weights_' + str(i)], mappings)
+                virtual_weights = tf.gather(self.vars['weights_' + str(i)], mappings) * signs
                 pre_sup = dot(x, virtual_weights, sparse=self.sparse_inputs)
             else:
                 pre_sup = self.vars['weights_' + str(i)]
