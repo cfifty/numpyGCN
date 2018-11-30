@@ -11,13 +11,13 @@ def softmax(X):
     return exp_X / exp_X_rowsum
 
 def softmax_cross_entropy_deriv(X, Y):
-	return X - Y
+    return X - Y
 
 def relu(X):
-	return np.maximum(X, np.zeros((X.shape)))
+    return np.maximum(X, np.zeros((X.shape)))
 
 def relu_diff(X):
-	return (X > 0).astype(int)
+    return (X > 0).astype(int)
 
 '''
 Code below this point is from Kipf & Welling's GCN paper for building the graph & dataset splits
