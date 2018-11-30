@@ -6,7 +6,9 @@ For more information on Graph Convolutional networks see [GCN](http://tkipf.gith
 
 ## Numpy Implementation
 
-TODO
+```bash
+python numpyGCN/train.py
+```
 
 ## TensorFlow Implementation
 
@@ -22,4 +24,6 @@ python tfGCN/train.py
 
 ## PyTorch Implementation
 
-TODO
+```bash
+python torchGCN/train.py
+```
