@@ -52,19 +52,21 @@ class numpyGCN:
         num_correct = np.sum(out_class == expected_class).astype(float)
         return num_correct / expected_class.shape[0]
 
-    # calculates the unnormalized total loss with cross-entropy
-    def calc_total_loss(self, X, Y, A, mask):
+    # normalized cross entropy loss
+    def calc_loss(self, X, Y, A, mask, weight_decay=0):
+        N = mask.sum()
         preds = self.forward(X, A)
         loss = np.sum(Y[mask] * np.log(preds[mask]))
-        return np.asscalar(-loss)
+        loss = np.asscalar(-loss) / N
 
-    # normalized cross entropy loss
-    def calc_loss(self, X, Y, A, mask):
-        N = mask.sum()
-        return (self.calc_total_loss(X, Y, A, mask) / N)
+        if weight_decay:
+            l2_reg = np.sum(np.square(self.W_1)) * weight_decay/2
+            return loss + l2_reg
+
+        return loss 
 
     # back propagation
-    def backprop(self, X, Y, A, mask, d):
+    def backprop(self, X, Y, A, mask, d, w_d=0):
         dW_1 = np.zeros(self.W_1.shape)
         dW_2 = np.zeros(self.W_2.shape)
 
@@ -74,7 +76,6 @@ class numpyGCN:
             d2 = np.random.binomial(1, (1-d), size=self.W_2.shape) / (1-d)
             preds = self.forward(X, A, (d1,d2))
         else: 
-            # predictions from forward pass
             preds = self.forward(X,A)
 
         # IMPORTANT: update gradient based only on masked labels
@@ -95,17 +96,17 @@ class numpyGCN:
 
         dL_dW1 = dIn1_dW1.dot(dL_dIn1)
 
+        if w_d:
+            dL_dW1 += w_d * self.W_1
+
         if d:
             dL_dW1 *= d1 
             dL_dW2 *= d2
         return (dL_dW1, dL_dW2)
 
-    def gradient_check(self, x, y, h=0.001, error_threshold=0.01):
-        raise NotImplementedError
-
-    def gd_update(self, X, Y, A, mask, lr=0.1, d=0.0):
+    def gd_update(self, X, Y, A, mask, lr, d, w_d):
         # compute weight gradients
-        dW_1, dW_2 = self.backprop(X, Y, A, mask, d)
+        dW_1, dW_2 = self.backprop(X, Y, A, mask, d, w_d)
 
         # TODO: drop loss by set amount during training...
         #loss = self.calc_loss(X, Y, A, mask)
