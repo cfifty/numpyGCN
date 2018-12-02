@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import time
 from datetime import datetime
 import numpy as np
@@ -5,8 +7,8 @@ import numpy as np
 from numpyGCN import numpyGCN
 from utils import load_data
 
-def train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, early_stopping=True, lr=0.005, d=0.0, epochs=200):
-    total_time = 0
+def train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, early_stopping=False, lr=0.005, d=0.0, epochs=200):
+    t_total = time.time()
     best_val_loss, val_epoch = float('inf'), 0
     for epoch in range(epochs):
         start = time.time()
@@ -16,12 +18,9 @@ def train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, ea
         train_accuracy = model.compute_accuracy(features, y_train, adj, train_mask)
         val_loss = model.calc_loss(features, y_val, adj, val_mask)
         val_accuracy = model.compute_accuracy(features, y_val, adj, val_mask)
-        elapsed = end - start
         print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(train_loss),
           "train_acc=", "{:.5f}".format(train_accuracy), "val_loss=", "{:.5f}".format(val_loss),
           "val_acc=", "{:.5f}".format(val_accuracy), "time=", "{:.5f}".format(elapsed))
-
-        total_time += elapsed
 
         if early_stopping:
             if val_loss < best_val_loss:
@@ -32,7 +31,7 @@ def train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, ea
                     print("validation loss has not improved for 10 epochs... stopping early")
                     break
 
-    print("Total time: {:.4f}s".format(total_time))
+    print("Total time: {:.4f}s".format(time.time() - t_total))
 
 # test the forward pass
 def test_forward():
