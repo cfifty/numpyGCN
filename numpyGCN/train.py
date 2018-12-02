@@ -18,6 +18,7 @@ def train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, ea
         train_accuracy = model.compute_accuracy(features, y_train, adj, train_mask)
         val_loss = model.calc_loss(features, y_val, adj, val_mask)
         val_accuracy = model.compute_accuracy(features, y_val, adj, val_mask)
+        elapsed = end - start
         print("Epoch:", '%04d' % (epoch + 1), "train_loss=", "{:.5f}".format(train_loss),
           "train_acc=", "{:.5f}".format(train_accuracy), "val_loss=", "{:.5f}".format(val_loss),
           "val_acc=", "{:.5f}".format(val_accuracy), "time=", "{:.5f}".format(elapsed))
