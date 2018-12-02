@@ -47,21 +47,15 @@ class numpyGCN:
     # returns the accuracy of the classifier
     def compute_accuracy(self, X, Y, A, mask):
         out = self.forward(X, A)
-        Y = Y[mask]
-        out = out[mask]
-        idx = np.argmax(out, axis=1)
-
-        num_correct = 0
-        for i in range(Y.shape[0]):
-            num_correct += Y[i, idx[i]]
-        return num_correct/Y.shape[0]
+        out_class = np.argmax(out[mask], axis=1)
+        expected_class = np.argmax(Y[mask], axis=1)
+        num_correct = np.sum(out_class == expected_class).astype(float)
+        return num_correct / expected_class.shape[0]
 
     # calculates the unnormalized total loss with cross-entropy
     def calc_total_loss(self, X, Y, A, mask):
-        loss = 0
         preds = self.forward(X, A)
-        for idx in np.argwhere(mask == True):
-            loss += np.inner(Y[idx], np.log(preds[idx]))
+        loss = np.sum(Y[mask] * np.log(preds[mask]))
         return np.asscalar(-loss)
 
     # normalized cross entropy loss
