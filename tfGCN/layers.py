@@ -1,4 +1,4 @@
-from tfGCN.inits import *
+from inits import *
 import xxhash
 import tensorflow as tf
 

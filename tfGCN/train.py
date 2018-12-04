@@ -4,8 +4,8 @@ from __future__ import print_function
 import time
 import tensorflow as tf
 
-from tfGCN.utils import *
-from tfGCN.models import GCN, HashedGCN, MLP
+from utils import *
+from models import *
 
 # Set random seed
 seed = 123

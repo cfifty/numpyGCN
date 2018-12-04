@@ -6,8 +6,13 @@ from datetime import datetime
 import numpy as np
 
 # Set random seed
+<<<<<<< HEAD
+#seed = 42
+#np.random.seed(seed)
+=======
 seed = 42
 np.random.seed(seed)
+>>>>>>> 2af4cda75fd27e3b4d587c76ade613d6c3ca8c00
 
 from numpyGCN import numpyGCN
 from utils import load_data
