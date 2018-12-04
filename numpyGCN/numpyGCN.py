@@ -30,7 +30,7 @@ class numpyGCN:
         if drop_weights:
             d1, d2 = drop_weights
             W_1 = W_1 * d1
-            W_2 = W_2 * d2
+            #W_2 = W_2 * d2
 
         self.in_1 = A.dot(X).dot(W_1)
         self.out_1 = relu(self.in_1)
@@ -100,16 +100,12 @@ class numpyGCN:
 
         if self.dropout:
             dL_dW1 *= d1
-            dL_dW2 *= d2
+            #dL_dW2 *= d2
         return (dL_dW1, dL_dW2)
 
     def gd_update(self, X, Y, A, mask, lr):
         # compute weight gradients
         dW_1, dW_2 = self.backprop(X, Y, A, mask)
-
-        # TODO: drop loss by set amount during training...
-        #loss = self.calc_loss(X, Y, A, mask)
-        #lr = loss * .01
 
         # parameter update
         self.W_1 -= dW_1 * lr

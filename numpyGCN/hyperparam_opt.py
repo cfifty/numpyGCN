@@ -1,16 +1,16 @@
 from __future__ import print_function
 
-import json
 import time
+import json
 from datetime import datetime
 import numpy as np
 
-# Set random seed
-#seed = 42
-#np.random.seed(seed)
-
 from numpyGCN import numpyGCN
 from utils import load_data
+from hyperopt import fmin, tpe, hp, STATUS_OK, Trials
+
+#seed = 123
+#np.random.seed(seed)
 
 def train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, early_stopping, lr, epochs):
     t_total = time.time()
@@ -48,9 +48,10 @@ def train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, ea
 
     print("Total time: {:.4f}s".format(time.time() - t_total))
 
-def train(learning_rate, early_stopping, dropout, weight_decay, epochs):
+def train(learning_rate, dropout, weight_decay):
     adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask = load_data('Cora')
-
+    early_stopping = True
+    epochs=200
     model = numpyGCN(
         input_dim=features.shape[1],
         hidden_dim=16,
@@ -64,16 +65,32 @@ def train(learning_rate, early_stopping, dropout, weight_decay, epochs):
     test_loss = model.calc_loss(features, y_test, adj, test_mask)
     test_accuracy = model.compute_accuracy(features, y_test, adj, test_mask)
 
+    val_acc = model.compute_accuracy(features, y_val, adj, val_mask)
+
     print("test_loss=", "{:.5f}".format(test_loss), "test_acc=", "{:.5f}".format(test_accuracy))
+    return val_acc
+
+def objective(space):
+    acc = train(space['learning_rate'], space['weight_decay'], space['dropout'])
+    print("learning rate " + str(space['learning_rate']) + '\n' + \
+          'weight decay ' + str(space['weight_decay']) + '\n' + \
+          'dropout ' + str(space['dropout']) + '\n' + \
+          'overall accuracy: ' + str(acc))
+    return {'loss': -acc, 'status': STATUS_OK}
 
 if __name__ == '__main__':
-    with open('numpyGCN_hyperparams.json') as f:
-        hp = json.load(f)
+    # Hyperparameter optimization
+    # train(learning_rate=0.1, dropout=0.5, weight_decay=0.0005)
+    #train(0.1, 0.2, 0.0005)
 
-    lr = hp['learning_rate']
-    d = hp['dropout']
-    w_d = hp['weight_decay']
-    #train(learning_rate=lr, early_stopping=True, dropout=d, weight_decay=w_d, epochs=200)
-    #train(learning_rate=0.1, early_stopping=True, dropout=0.2, weight_decay=0.0005, epochs=200)
-    train(learning_rate=0.1, early_stopping=True, dropout=0.0, weight_decay=0.0, epochs=200)
+    space = {
+             'learning_rate' : hp.uniform('learning_rate', 0.0001, 1.0), 
+             'weight_decay' : hp.uniform('weight_decay', 0.0, 0.001),
+             'dropout' : hp.uniform('dropout', 0.0, 1.0)
+             }
+
+    best = fmin(objective, space=space, algo=tpe.suggest, max_evals=600)
+
+    with open('numpyGCN_hyperparams.json', 'w') as f:
+        json.dump(best, f)
 
