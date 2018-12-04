@@ -1,4 +1,4 @@
-from inits import *
+from tfGCN.inits import *
 import xxhash
 import tensorflow as tf
 
@@ -192,9 +192,9 @@ class GraphConvolution(Layer):
 class GraphConvolutionCompressed(Layer):
     # W1, W2 = 1433 x 16, 16 x 7
     """Graph convolution layer compressed with the hashing trick."""
-    def __init__(self, input_dim, output_dim, placeholders, layer_num, dropout=0.,
-                 sparse_inputs=False, act=tf.nn.relu, bias=False,
-                 featureless=False, virtual_weight_dim=91712, **kwargs):
+    def __init__(self, input_dim, output_dim, virtual_weight_dim, placeholders,
+                 layer_num, dropout=0., sparse_inputs=False, act=tf.nn.relu,
+                 bias=False, featureless=False, **kwargs):
         super(GraphConvolutionCompressed, self).__init__(**kwargs)
 
         if dropout:
@@ -223,18 +223,6 @@ class GraphConvolutionCompressed(Layer):
             if self.bias:
                 self.vars['bias'] = zeros([output_dim], name='bias')
 
-        if self.logging:
-            self._log_vars()
-
-    def _call(self, inputs):
-        x = inputs
-
-        # dropout
-        if self.sparse_inputs:
-            x = sparse_dropout(x, 1-self.dropout, self.num_features_nonzero)
-        else:
-            x = tf.nn.dropout(x, 1-self.dropout)
-
         # build up hash mappings
         mappings = []
         signs = []
@@ -248,14 +236,26 @@ class GraphConvolutionCompressed(Layer):
                 hashed_sign = 1. - 2 * (xxhash.xxh32_intdigest(str((k, j)), self.seed + 1000) % 2)
                 mappings[-1].append(virtual_weight_idx)
                 signs[-1].append(hashed_sign)
-        mappings = tf.stack(mappings)
-        signs = tf.stack(signs)
+        self.mappings = tf.stack(mappings)
+        self.signs = tf.stack(signs)
+
+        if self.logging:
+            self._log_vars()
+
+    def _call(self, inputs):
+        x = inputs
+
+        # dropout
+        if self.sparse_inputs:
+            x = sparse_dropout(x, 1-self.dropout, self.num_features_nonzero)
+        else:
+            x = tf.nn.dropout(x, 1-self.dropout)
 
         # convolve
         supports = list()
         for i in range(len(self.support)):
             if not self.featureless:
-                virtual_weights = tf.gather(self.vars['weights_' + str(i)], mappings) * signs
+                virtual_weights = tf.gather(self.vars['weights_' + str(i)], self.mappings) * self.signs
                 pre_sup = dot(x, virtual_weights, sparse=self.sparse_inputs)
             else:
                 pre_sup = self.vars['weights_' + str(i)]

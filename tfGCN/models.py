@@ -1,5 +1,5 @@
-from layers import *
-from metrics import *
+from tfGCN.layers import *
+from tfGCN.metrics import *
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
@@ -183,7 +183,8 @@ class HashedGCN(Model):
         self.inputs = placeholders['features']
         self.input_dim = input_dim
         self.output_dim = placeholders['labels'].get_shape().as_list()[1]
-        self.compression_factor = FLAGS.compression_factor
+        self.compression_factor1 = FLAGS.compression_factor1
+        self.compression_factor2 = FLAGS.compression_factor2
         self.placeholders = placeholders
 
         self.optimizer = tf.train.AdamOptimizer(learning_rate=FLAGS.learning_rate)
@@ -207,7 +208,7 @@ class HashedGCN(Model):
         self.layers.append(GraphConvolutionCompressed(
             input_dim=self.input_dim,
             output_dim=FLAGS.hidden1,
-            virtual_weight_dim=self.input_dim * FLAGS.hidden1 // self.compression_factor,
+            virtual_weight_dim=self.input_dim * FLAGS.hidden1 // self.compression_factor1,
             layer_num = 1,
             placeholders=self.placeholders,
             act=tf.nn.relu,
@@ -218,7 +219,7 @@ class HashedGCN(Model):
         self.layers.append(GraphConvolutionCompressed(
             input_dim=FLAGS.hidden1,
             output_dim=self.output_dim,
-            virtual_weight_dim=FLAGS.hidden1 * self.output_dim // self.compression_factor,
+            virtual_weight_dim=FLAGS.hidden1 * self.output_dim // self.compression_factor2,
             layer_num = 2,
             placeholders=self.placeholders,
             act=lambda x: x,
