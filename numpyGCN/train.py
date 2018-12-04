@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import json
 import time
+import argparse
 from datetime import datetime
 import numpy as np
 
@@ -48,8 +49,8 @@ def train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, ea
 
     print("Total time: {:.4f}s".format(time.time() - t_total))
 
-def train(learning_rate, early_stopping, dropout, weight_decay, epochs):
-    adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask = load_data('Cora')
+def train(learning_rate, early_stopping, dropout, weight_decay, epochs, dataset):
+    adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask = load_data(dataset)
 
     model = numpyGCN(
         input_dim=features.shape[1],
@@ -67,6 +68,12 @@ def train(learning_rate, early_stopping, dropout, weight_decay, epochs):
     print("test_loss=", "{:.5f}".format(test_loss), "test_acc=", "{:.5f}".format(test_accuracy))
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser("numpyGCN")
+    parser.add_argument('--dataset', default='cora')
+    args = parser.parse_args()
+
+    print('Using {} dataset'.format(args.dataset))
+
     with open('numpyGCN_hyperparams.json') as f:
         hp = json.load(f)
 
@@ -75,5 +82,4 @@ if __name__ == '__main__':
     w_d = hp['weight_decay']
     #train(learning_rate=lr, early_stopping=True, dropout=d, weight_decay=w_d, epochs=200)
     #train(learning_rate=0.1, early_stopping=True, dropout=0.2, weight_decay=0.0005, epochs=200)
-    train(learning_rate=0.1, early_stopping=True, dropout=0.0, weight_decay=0.0, epochs=200)
-
+    train(learning_rate=0.1, early_stopping=True, dropout=0.0, weight_decay=0.0, epochs=200, dataset=args.dataset)
