@@ -30,7 +30,7 @@ class numpyGCN:
         if drop_weights:
             d1, d2 = drop_weights
             W_1 = W_1 * d1
-            W_2 = W_2 * d2
+            #W_2 = W_2 * d2
 
         self.in_1 = A.dot(X).dot(W_1)
         self.out_1 = relu(self.in_1)
@@ -100,7 +100,7 @@ class numpyGCN:
 
         if self.dropout:
             dL_dW1 *= d1
-            dL_dW2 *= d2
+            #dL_dW2 *= d2
         return (dL_dW1, dL_dW2)
 
     def gd_update(self, X, Y, A, mask, lr):
