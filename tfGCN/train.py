@@ -36,18 +36,10 @@ if FLAGS.model == 'gcn':
     support = [preprocess_adj(adj)]
     num_supports = 1
     model_func = GCN
-elif FLAGS.model == 'gcn_cheby':
-    support = chebyshev_polynomials(adj, FLAGS.max_degree)
-    num_supports = 1 + FLAGS.max_degree
-    model_func = GCN
 elif FLAGS.model == 'hashed_gcn':
     support = [preprocess_adj(adj)]
     num_supports = 1
     model_func = HashedGCN
-elif FLAGS.model == 'dense':
-    support = [preprocess_adj(adj)]  # Not used
-    num_supports = 1
-    model_func = MLP
 else:
     raise ValueError('Invalid argument for model: ' + str(FLAGS.model))
 
@@ -80,6 +72,7 @@ def evaluate(features, support, labels, mask, placeholders):
 sess.run(tf.global_variables_initializer())
 
 cost_val = []
+t_total = time.time()
 
 # Train model
 for epoch in range(FLAGS.epochs):
@@ -106,8 +99,9 @@ for epoch in range(FLAGS.epochs):
         break
 
 print("Optimization Finished!")
+print("Total time elapsed: {:.4f}s".format(time.time() - t_total))
 
 # Testing
 test_cost, test_acc, test_duration = evaluate(features, support, y_test, test_mask, placeholders)
 print("Test set results:", "cost=", "{:.5f}".format(test_cost),
-      "accuracy=", "{:.5f}".format(test_acc), "time=", "{:.5f}".format(test_duration))
+      "accuracy=", "{:.5f}".format(test_acc))
