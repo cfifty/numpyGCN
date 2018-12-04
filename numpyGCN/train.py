@@ -4,6 +4,10 @@ import time
 from datetime import datetime
 import numpy as np
 
+# Set random seed
+seed = 42
+np.random.seed(seed)
+
 from numpyGCN import numpyGCN
 from utils import load_data
 
