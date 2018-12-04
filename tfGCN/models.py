@@ -1,5 +1,5 @@
-from tfGCN.layers import *
-from tfGCN.metrics import *
+from layers import *
+from metrics import *
 
 flags = tf.app.flags
 FLAGS = flags.FLAGS
