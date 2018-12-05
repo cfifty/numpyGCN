@@ -65,6 +65,28 @@ class numpyGCN:
 
         return loss
 
+    def loss_accuracy(self, X, Y, A, mask):
+        """ Combination of calc_loss and compute_accuracy to reduce the need to forward propagate twice """
+
+        # from calc_loss
+        N = mask.sum()
+        preds = self.forward(X, A)
+        loss = np.sum(Y[mask] * np.log(preds[mask]))
+        loss = np.asscalar(-loss) / N
+
+        if self.weight_decay:
+            l2_reg = np.sum(np.square(self.W_1)) * self.weight_decay / 2
+            loss = loss + l2_reg
+
+        # from compute_accuracy
+        out = preds
+        out_class = np.argmax(out[mask], axis=1)
+        expected_class = np.argmax(Y[mask], axis=1)
+        num_correct = np.sum(out_class == expected_class).astype(float)
+        accuracy = num_correct / expected_class.shape[0]
+
+        return loss, accuracy
+
     # back propagation
     def backprop(self, X, Y, A, mask):
         dW_1 = np.zeros(self.W_1.shape)
