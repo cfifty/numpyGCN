@@ -6,7 +6,7 @@ from utils import softmax, softmax_cross_entropy_deriv, relu, relu_diff
 class numpyGCN:
 
     # two layer GCN
-    def __init__(self, input_dim, hidden_dim, output_dim, dropout=None, weight_decay=0):
+    def __init__(self, input_dim, hidden_dim, output_dim, dropout=None, weight_decay=0, random_noise=False):
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
@@ -14,6 +14,7 @@ class numpyGCN:
         self.out_1 = None
         self.in_2 = None
         self.out_2 = None
+        self.random_noise = True
 
         self.dropout = dropout
         self.weight_decay = weight_decay
@@ -69,6 +70,11 @@ class numpyGCN:
         dW_1 = np.zeros(self.W_1.shape)
         dW_2 = np.zeros(self.W_2.shape)
 
+        if self.random_noise:
+            tmp_W1, tmp_W2 = self.W_1, self.W_2
+            self.W_1 += np.random.normal(0, 0.001, self.W_1.shape)
+            self.W_2 += np.random.normal(0, 0.001, self.W_2.shape)
+
         # divide by d so expectation of GCN layer doesn't change from train to test
         if self.dropout:
             d1 = np.random.binomial(1, (1-self.dropout), size=self.W_1.shape) / (1-self.dropout)
@@ -101,6 +107,10 @@ class numpyGCN:
         if self.dropout:
             dL_dW1 *= d1
             #dL_dW2 *= d2
+
+        if self.random_noise:
+            self.W_1, self.W_2 = tmp_W1, tmp_W2
+
         return (dL_dW1, dL_dW2)
 
     def gd_update(self, X, Y, A, mask, lr):
