@@ -71,7 +71,7 @@ class numpyGCN:
         dW_2 = np.zeros(self.W_2.shape)
 
         if self.random_noise:
-            tmp_W1, tmp_W2 = self.W_1, self.W_2
+            tmp_W1, tmp_W2 = np.copy(self.W_1), np.copy(self.W_2)
             self.W_1 += np.random.normal(0, 0.001, self.W_1.shape)
             self.W_2 += np.random.normal(0, 0.001, self.W_2.shape)
 
