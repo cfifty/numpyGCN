@@ -49,7 +49,7 @@ def train_with_gd(model, features, adj, y_train, y_val, train_mask, val_mask, ea
     print("Total time: {:.4f}s".format(time.time() - t_total))
 
 def train(learning_rate, dropout, weight_decay):
-    adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask = load_data('Cora')
+    adj, features, y_train, y_val, y_test, train_mask, val_mask, test_mask = load_data('citeseer')
     early_stopping = True
     epochs=200
     model = numpyGCN(

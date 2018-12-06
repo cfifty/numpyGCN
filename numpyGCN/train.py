@@ -8,7 +8,7 @@ import numpy as np
 
 # Set random seed
 seed = 42
-np.random.seed(seed)
+#np.random.seed(seed)
 
 from numpyGCN import numpyGCN
 from utils import load_data
@@ -69,7 +69,7 @@ def train(learning_rate, early_stopping, dropout, weight_decay, epochs, dataset)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("numpyGCN")
-    parser.add_argument('--dataset', default='cora')
+    parser.add_argument('--dataset', default='citeseer')
     args = parser.parse_args()
 
     print('Using {} dataset'.format(args.dataset))
@@ -80,6 +80,5 @@ if __name__ == '__main__':
     lr = hp['learning_rate']
     d = hp['dropout']
     w_d = hp['weight_decay']
-    #train(learning_rate=lr, early_stopping=True, dropout=d, weight_decay=w_d, epochs=200)
-    #train(learning_rate=0.1, early_stopping=True, dropout=0.2, weight_decay=0.0005, epochs=200)
-    train(learning_rate=0.1, early_stopping=True, dropout=0.0, weight_decay=0.0, epochs=200, dataset=args.dataset)
+    #train(learning_rate=lr, early_stopping=True, dropout=d, weight_decay=w_d, epochs=200, dataset=args.dataset)
+    train(learning_rate=0.1, early_stopping=False, dropout=0.0, weight_decay=0.0, epochs=200, dataset=args.dataset)

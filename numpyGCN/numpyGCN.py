@@ -14,7 +14,7 @@ class numpyGCN:
         self.out_1 = None
         self.in_2 = None
         self.out_2 = None
-        self.random_noise = True
+        self.random_noise = False
 
         self.dropout = dropout
         self.weight_decay = weight_decay
