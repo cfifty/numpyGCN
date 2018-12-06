@@ -6,7 +6,7 @@ from utils import softmax, softmax_cross_entropy_deriv, relu, relu_diff
 class numpyGCN:
 
     # two layer GCN
-    def __init__(self, input_dim, hidden_dim, output_dim, dropout=None, weight_decay=0, random_noise=False):
+    def __init__(self, input_dim, hidden_dim, output_dim, dropout=None, weight_decay=0):
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
